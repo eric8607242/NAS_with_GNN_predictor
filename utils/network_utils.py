@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 OPS = {
-        "skip" : lambda input_channel, output_channel, stride, affine: Identity() if (stride==1 and input_channel == output_channel) else FactorizedReduce(input_channel, output_channel, affine=affine),
+        "skip" : lambda input_channel, output_channel, stride, affine: Identity(input_channel, output_channel) if stride==1 else FactorizedReduce(input_channel, output_channel, affine=affine),
         "sep_conv_3x3" : lambda input_channel, output_channel, stride, affine: SepConv(input_channel, output_channel, 3, stride, 1, affine=affine),
         "sep_conv_5x5" : lambda input_channel, output_channel, stride, affine: SepConv(input_channel, output_channel, 5, stride, 2, affine=affine),
         "sep_conv_7x7" : lambda input_channel, output_channel, stride, affine: SepConv(input_channel, output_channel, 7, stride, 3, affine=affine),
@@ -44,11 +44,18 @@ class SepConv(nn.Module):
         return self.op(x)
 
 class Identity(nn.Module):
-    def __init__(self):
+    def __init__(self, input_channel, output_channel):
         super(Identity, self).__init__()
 
+        self.op = None
+        if input_channel != output_channel:
+            self.op = nn.Conv2d(input_channel, output_channel, kernel_size=1, stride=1, padding=0, bias=False)
+        else:
+            self.op = nn.Sequential()
+
     def forward(self, x):
-        return x
+        y = self.op(x)
+        return y
 
 
 class FactorizedReduce(nn.Module):
