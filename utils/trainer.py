@@ -7,7 +7,7 @@ import torch.nn as nn
 from utils.util import AverageMeter, accuracy
 
 class Trainer:
-    def __init__(self, criterion, optimizer, scheuler, writer, device, CONFIG):
+    def __init__(self, criterion, optimizer, scheduler, writer, device, CONFIG):
         self.top1 = AverageMeter()
         self.top5 = AverageMeter()
         self.losses = AverageMeter()
@@ -17,7 +17,7 @@ class Trainer:
 
         self.criterion = criterion
         self.optimizer = optimizer
-        self.scheuler = scheuler
+        self.scheduler = scheduler
 
         self.CONFIG = CONFIG
 
@@ -59,7 +59,6 @@ class Trainer:
             self.optimizer.step()
             self._intermediate_stats_logging(outs, y, loss, step, epoch, N, len_loader=len(loader), val_or_train="Train")
 
-        self._epoch_stats_logging(start_time=start_time, epoch=epoch, info_for_logger=info_for_logger, val_or_train="Train")
         for avg in [self.top1, self.top5, self.losses]:
             avg.reset()
 
@@ -93,6 +92,6 @@ class Trainer:
         if (step > 1 and step % self.CONFIG.print_freq == 0) or step == len_loader -1:
             logging.info(val_or_train+
                     ":[{:3d}/{}] Step {:03d}/{:03d} Loss {:.3f}"
-                    "Prec@(1, 3) ({:.1f%}, {:.1%})".format(
-                        epoch+1, self.epochs, step, len_loader-1, self.losses.get_avg(),
+                    "Prec@(1, 3) ({:.1%}, {:.1%})".format(
+                        epoch+1, self.epochs, step, len_loader-1, self.losses.get_avg(), 
                         self.top1.get_avg(), self.top5.get_avg()))

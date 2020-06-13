@@ -40,6 +40,9 @@ if __name__ == "__main__":
     train_loader, val_loader, test_loader = get_dataloader(train_dataset, val_dataset, test_dataset, CONFIG)
 
     model = Supernet(adj_matrix, CONFIG)
+    model = model.to(device)
+    if (device.type == "cuda" and CONFIG.ngpu >= 1):
+        model = nn.DataParallel(model, list(range(CONFIG.ngpu)))
 
     criterion = cross_encropy_with_label_smoothing
     cal_model_efficient(model, CONFIG)
