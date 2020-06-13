@@ -39,6 +39,7 @@ class Trainer:
                 best_top1 = top1_avg
                 
         logging.info("The best top1 acc : {}".format(best_top1))
+        return best_top1
 
 
     def _training_step(self, model, loader, epoch, info_for_logger=""):

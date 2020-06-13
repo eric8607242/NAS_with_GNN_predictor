@@ -2,6 +2,8 @@ import time
 import logging
 import argparse
 
+import pandas as pd
+
 import torch
 import torch.nn as nn
 
@@ -17,6 +19,7 @@ from utils.graph import calculate_nodes, get_adj_matrix, get_random_architecture
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--cfg", type=str, help="path to the config file", required=True)
+    parser.add_argument("--load-architecture", action="store_true")
     args = parser.parse_args()
 
     CONFIG = get_config(args.cfg)
@@ -30,30 +33,52 @@ if __name__ == "__main__":
 
     get_logger(CONFIG.log_dir)
 
-    nodes_num = calculate_nodes(CONFIG)
-    adj_matrix = get_adj_matrix(nodes_num, CONFIG)
-    adj_matrix = get_random_architecture(adj_matrix, CONFIG)
-    print(adj_matrix)
-
     train_transform, val_transform, test_transform = get_transforms(CONFIG)
     train_dataset, val_dataset, test_dataset = get_dataset(train_transform, val_transform, test_transform, CONFIG)
     train_loader, val_loader, test_loader = get_dataloader(train_dataset, val_dataset, test_dataset, CONFIG)
 
-    model = Supernet(adj_matrix, CONFIG)
-    model = model.to(device)
-    if (device.type == "cuda" and CONFIG.ngpu >= 1):
-        model = nn.DataParallel(model, list(range(CONFIG.ngpu)))
+    avg_metric = {"architecture_num":[], "avg":[]}
+    nodes_num = calculate_nodes(CONFIG)
 
-    criterion = cross_encropy_with_label_smoothing
-    cal_model_efficient(model, CONFIG)
-    # ============================
+    architectures = None
+    if args.load_architecture:
+        architectures = pd.read_csv(CONFIG.path_to_architecture)
+        print(architectures.iloc[0].values)
+    else:
+        nodes_num = calculate_nodes(CONFIG)
+        adj_matrix = get_adj_matrix(nodes_num, CONFIG)
+        adj_matrix = get_random_architecture(adj_matrix, CONFIG)
 
-    optimizer = get_optimizer(model, CONFIG.optim_state)
-    scheduler = get_lr_scheduler(optimizer, len(train_loader), CONFIG)
+    for i in range(300):
+        total_top1 = 0
+        for j in range(2):
+            adj_matrix = architectures.iloc[i].values
+            adj_matrix = adj_matrix.reshape(nodes_num, nodes_num)
 
-    start_time = time.time()
-    trainer = Trainer(criterion, optimizer, scheduler, None, device, CONFIG)
-    trainer.train_loop(train_loader, test_loader, model)
-    logging.info("Total training time : {:.2f}".format(time.time() - start_time))
+            model = Supernet(adj_matrix, CONFIG)
+            model = model.to(device)
+            if (device.type == "cuda" and CONFIG.ngpu >= 1):
+                model = nn.DataParallel(model, list(range(CONFIG.ngpu)))
+
+            criterion = cross_encropy_with_label_smoothing
+            cal_model_efficient(model, CONFIG)
+
+            optimizer = get_optimizer(model, CONFIG.optim_state)
+            scheduler = get_lr_scheduler(optimizer, len(train_loader), CONFIG)
+
+            start_time = time.time()
+            trainer = Trainer(criterion, optimizer, scheduler, None, device, CONFIG)
+            best_top1 = trainer.train_loop(train_loader, test_loader, model)
+            logging.info("Total training time : {:.2f}".format(time.time() - start_time))
+
+            total_top1 += best_top1
+        total_top1 /= 2
+
+        avg_metric["architecture_num"].append(i)
+        avg_metric["avg"].append(total_top1)
+
+    df_metric = pd.DataFrame(avg_metric)
+    df_metric.to_csv(CONFIG.path_to_train_data, index=False)
+
     
 
