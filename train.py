@@ -49,7 +49,7 @@ if __name__ == "__main__":
         adj_matrix = get_adj_matrix(nodes_num, CONFIG)
         adj_matrix = get_random_architecture(adj_matrix, CONFIG)
 
-    for i in range(300):
+    for i in range(100):
         total_top1 = 0
         for j in range(2):
             adj_matrix = architectures.iloc[i].values
