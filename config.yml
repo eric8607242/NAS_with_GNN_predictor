@@ -1,0 +1,37 @@
+cuda: True
+ngpu: 4
+num_workers: 16
+seed: 42
+
+log_dir: "./logs/"
+write_dir: "./logs/tb/"
+
+epochs: 200
+batch_size: 512
+print_freq: 100
+
+dataset: cifar100
+classes: 100
+dataset_dir: ./data
+input_size: 32
+train_portion: 1
+mean: [0.49139968, 0.48215827, 0.44653124]
+std: [0.2023, 0.1994, 0.2010]
+
+
+optim_state: !include ./optim_state.yml
+
+lr_scheduler: step
+step_size: 80
+decay_ratio: 0.1
+
+#ops_name : ["skip", "sep_conv_3x3", "sep_conv_5x5", "sep_conv_7x7", "dil_conv_3x3", "dil_conv_5x5"]
+ops_name : ["skip", "sep_conv_3x3"]
+l_cfgs: [[16, 1],
+         [32, 2],
+         [32, 1],
+         [40, 2],
+         [40, 1],
+         [80, 2],
+         [80, 1],
+         [320, 1]]
