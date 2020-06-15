@@ -122,10 +122,9 @@ def accuracy(output, target, topk=(1,)):
 
     return res
 
-def save(model, optimizer, model_path):
+def save(model, model_path):
     torch.save({
                 "model":model.module.state_dict() if isinstance(model, nn.DataParallel) else model.state_dict(),
-                "optimzier":optimizer.state_dict()
                 }, model_path)
 
 def cross_entropy_for_onehot(pred, target):

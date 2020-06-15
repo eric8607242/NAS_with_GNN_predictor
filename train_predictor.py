@@ -10,7 +10,7 @@ from torch_geometric.utils import from_networkx
 
 from utils.predictor import Predictor
 from utils.config import get_config
-from utils.util import get_logger, set_random_seed
+from utils.util import get_logger, set_random_seed, save
 from utils.graph import calculate_nodes
 
 def get_edge_index(adj_matrix):
@@ -64,7 +64,7 @@ if __name__ == "__main__":
     test_data = data.iloc[250:]
 
     best_loss = 100
-    for epoch in range(50):
+    for epoch in range(250):
         for i in range(50):
             optimizer.zero_grad()
 
@@ -112,9 +112,10 @@ if __name__ == "__main__":
             test_metric["avg"].append(y.item())
         test_loss /= 50
         if best_loss > test_loss.item():
+            save(model. "gcn_weight.pth")
             print(test_loss.item())
             df_metric = pd.DataFrame(test_metric)
-            df_metric.to_csv("./test_50.csv", index=False)
+            df_metric.to_csv("./test.csv", index=False)
             best_loss = test_loss.item()
 
 
