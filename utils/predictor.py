@@ -63,13 +63,20 @@ class Encoder(nn.Module):
         return max_out
 
 class Predictor(nn.Module):
-    def __init__(self, input_dim=3, embedding_dim=128, hidden_dim=54, layer_nums=5):
+    def __init__(self, nodes_num, input_dim=3, embedding_dim=128, hidden_dim=54, layer_nums=5):
         super(Predictor, self).__init__()
         self.e = Encoder(input_dim, layer_nums, embedding_dim=embedding_dim)
 
+        self.predictor = nn.Sequential(nn.Linear(nodes_num*embedding_dim, hidden_dim),
+                                       nn.LeakyReLU(),
+                                       nn.Linear(hidden_size, 1),
+                                       nn.Sigmoid())
+        self.nodes_num = nodes_num
+        self.embedding_dim = embedding_dim
+
     def forward(self, x, edge_index):
         x = self.e(x, edge_index)
-
+        x = x.reshape(-1, self.nodes_num*self.embedding_dim)
         return x
 
 if __name__ == "__main__":

@@ -52,6 +52,7 @@ if __name__ == "__main__":
     model = model.cuda()
 
     optimizer = Adam(params=model.parameters(), lr=0.0001)
+    criterion = nn.MSELoss()
 
     adj_matrix_table = pd.read_csv(CONFIG.path_to_architecture)
     data = pd.read_csv(CONFIG.path_to_train_data)
@@ -62,19 +63,27 @@ if __name__ == "__main__":
     nodes_num = calculate_nodes(CONFIG)
 
     for epoch in range(1):
+        optimizer.zeros_grad()
+
         architecture_num = train_data["architecture_num"][:2]
+        y = train_data["avg"][:2]
         adj_matrix = adj_matrix_table.iloc[architecture_num].values
         adj_matrix = adj_matrix.reshape(nodes_num, nodes_num)
 
         X = get_input_data(adj_matrix)
         edge_index = get_edge_index(adj_matrix)
 
-        print(X)
         X = wrap_data(X)
+        y = wrap_data(y)
         edge_index = wrap_data(edge_index, dtype=torch.long)
 
         outs = model(X, edge_index)
-        print(outs.shape)
+        loss = criterion(outs, y)
+
+        loss.backward()
+        optimizer.step()
+
+        print(loss.items())
 
         
 
