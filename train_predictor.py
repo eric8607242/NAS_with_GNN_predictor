@@ -1,6 +1,8 @@
 import random
 import argparse
 
+import pandas as pd
+
 import torch
 from torch.optim import Adam
 from torch_geometric.utils import from_networkx
@@ -8,6 +10,7 @@ from torch_geometric.utils import from_networkx
 from utils.predictor import Predictor
 from utils.config import get_config
 from utils.util import get_logger, set_random_seed
+from utils.graph import calculate_nodes
 
 def get_edge_index(adj_matrix):
     edge_index = [[], []]
@@ -20,7 +23,7 @@ def get_edge_index(adj_matrix):
 
 def get_input_data(adj_matrix):
     degree_value = []
-    for row in enumerate(adj_matrix):
+    for row in adj_matrix:
         degree_value.append([sum(row)-1, 1, 1])
     return degree_value
 
@@ -50,24 +53,28 @@ if __name__ == "__main__":
 
     optimizer = Adam(params=model.parameters(), lr=0.0001)
 
-    data = pd.read_csv(CONFIG.path_to_architecture)
-    adj_matrix_table = pd.read_csv(CONFIG.path_to_train_data)
+    adj_matrix_table = pd.read_csv(CONFIG.path_to_architecture)
+    data = pd.read_csv(CONFIG.path_to_train_data)
 
     train_data = data.iloc[:250]
     test_data = data.iloc[250:]
 
+    nodes_num = calculate_nodes(CONFIG)
+
     for epoch in range(1):
-        architecture_num = train_data.iloc[0]["architecture_num"]
+        architecture_num = train_data["architecture_num"][:2]
         adj_matrix = adj_matrix_table.iloc[architecture_num].values
         adj_matrix = adj_matrix.reshape(nodes_num, nodes_num)
 
         X = get_input_data(adj_matrix)
         edge_index = get_edge_index(adj_matrix)
 
+        print(X)
         X = wrap_data(X)
-        edge_index = wrap_data(edge_index)
+        edge_index = wrap_data(edge_index, dtype=torch.long)
 
         outs = model(X, edge_index)
+        print(outs.shape)
 
         
 

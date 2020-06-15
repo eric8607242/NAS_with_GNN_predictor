@@ -14,7 +14,7 @@ class GCNConv(MessagePassing):
         edge_index, _ = add_self_loops(edge_index, num_nodes=x.size(0))
 
         row, col = edge_index
-        deg = degree(row, x.size(0, dtype=x.dtype))
+        deg = degree(row, x.size(0), dtype=x.dtype)
         deg_inv_sqrt = deg.pow(-0.5)
         norm = deg_inv_sqrt[row] * deg_inv_sqrt[col]
 
