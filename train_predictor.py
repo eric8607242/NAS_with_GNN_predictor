@@ -4,6 +4,7 @@ import argparse
 import pandas as pd
 
 import torch
+import torch.nn as nn
 from torch.optim import Adam
 from torch_geometric.utils import from_networkx
 
@@ -48,7 +49,9 @@ if __name__ == "__main__":
 
     set_random_seed(CONFIG.seed)
 
-    model = Predictor()
+    nodes_num = calculate_nodes(CONFIG)
+
+    model = Predictor(nodes_num)
     model = model.cuda()
 
     optimizer = Adam(params=model.parameters(), lr=0.0001)
@@ -60,30 +63,29 @@ if __name__ == "__main__":
     train_data = data.iloc[:250]
     test_data = data.iloc[250:]
 
-    nodes_num = calculate_nodes(CONFIG)
+    for epoch in range(10):
+        for i in range(250):
+            optimizer.zero_grad()
 
-    for epoch in range(1):
-        optimizer.zeros_grad()
+            architecture_num = train_data["architecture_num"][i]
+            y = train_data["avg"][i]
+            adj_matrix = adj_matrix_table.iloc[architecture_num].values
+            adj_matrix = adj_matrix.reshape(nodes_num, nodes_num)
 
-        architecture_num = train_data["architecture_num"][:2]
-        y = train_data["avg"][:2]
-        adj_matrix = adj_matrix_table.iloc[architecture_num].values
-        adj_matrix = adj_matrix.reshape(nodes_num, nodes_num)
+            X = get_input_data(adj_matrix)
+            edge_index = get_edge_index(adj_matrix)
 
-        X = get_input_data(adj_matrix)
-        edge_index = get_edge_index(adj_matrix)
+            X = wrap_data(X)
+            y = wrap_data([y])
+            edge_index = wrap_data(edge_index, dtype=torch.long)
 
-        X = wrap_data(X)
-        y = wrap_data(y)
-        edge_index = wrap_data(edge_index, dtype=torch.long)
+            outs = model(X, edge_index)
+            loss = criterion(outs, y)
 
-        outs = model(X, edge_index)
-        loss = criterion(outs, y)
+            loss.backward()
+            optimizer.step()
 
-        loss.backward()
-        optimizer.step()
-
-        print(loss.items())
+            print(loss.item())
 
         
 

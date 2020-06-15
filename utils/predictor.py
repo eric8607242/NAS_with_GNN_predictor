@@ -69,7 +69,7 @@ class Predictor(nn.Module):
 
         self.predictor = nn.Sequential(nn.Linear(nodes_num*embedding_dim, hidden_dim),
                                        nn.LeakyReLU(),
-                                       nn.Linear(hidden_size, 1),
+                                       nn.Linear(hidden_dim, 1),
                                        nn.Sigmoid())
         self.nodes_num = nodes_num
         self.embedding_dim = embedding_dim
@@ -77,6 +77,7 @@ class Predictor(nn.Module):
     def forward(self, x, edge_index):
         x = self.e(x, edge_index)
         x = x.reshape(-1, self.nodes_num*self.embedding_dim)
+        x = self.predictor(x)
         return x
 
 if __name__ == "__main__":
