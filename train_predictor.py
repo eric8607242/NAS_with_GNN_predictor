@@ -64,8 +64,8 @@ if __name__ == "__main__":
     test_data = data.iloc[250:]
 
     best_loss = 100
-    for epoch in range(250):
-        for i in range(50):
+    for epoch in range(50):
+        for i in range(250):
             optimizer.zero_grad()
 
             architecture_num = train_data["architecture_num"][i]
@@ -112,7 +112,7 @@ if __name__ == "__main__":
             test_metric["avg"].append(y.item())
         test_loss /= 50
         if best_loss > test_loss.item():
-            save(model. "gcn_weight.pth")
+            save(model, "gcn_weight.pth")
             print(test_loss.item())
             df_metric = pd.DataFrame(test_metric)
             df_metric.to_csv("./test.csv", index=False)
