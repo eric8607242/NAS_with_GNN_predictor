@@ -63,8 +63,9 @@ if __name__ == "__main__":
     train_data = data.iloc[:250]
     test_data = data.iloc[250:]
 
-    for epoch in range(10):
-        for i in range(250):
+    best_loss = 100
+    for epoch in range(50):
+        for i in range(50):
             optimizer.zero_grad()
 
             architecture_num = train_data["architecture_num"][i]
@@ -85,7 +86,37 @@ if __name__ == "__main__":
             loss.backward()
             optimizer.step()
 
-            print(loss.item())
+        test_loss = 0
+
+    
+        test_metric = {"architecture_num":[], "predict_avg":[], "avg":[]}
+        for i in range(50):
+            architecture_num = test_data["architecture_num"][i+250]
+            y = test_data["avg"][i+250]
+            adj_matrix = adj_matrix_table.iloc[architecture_num].values
+            adj_matrix = adj_matrix.reshape(nodes_num, nodes_num)
+
+            X = get_input_data(adj_matrix)
+            edge_index = get_edge_index(adj_matrix)
+
+            X = wrap_data(X)
+            y = wrap_data([y])
+            edge_index = wrap_data(edge_index, dtype=torch.long)
+
+            outs = model(X, edge_index)
+            loss = criterion(outs, y)
+            test_loss += loss
+
+            test_metric["architecture_num"].append(i+250)
+            test_metric["predict_avg"].append(outs.item())
+            test_metric["avg"].append(y.item())
+        test_loss /= 50
+        if best_loss > test_loss.item():
+            print(test_loss.item())
+            df_metric = pd.DataFrame(test_metric)
+            df_metric.to_csv("./test_50.csv", index=False)
+            best_loss = test_loss.item()
+
 
         
 
