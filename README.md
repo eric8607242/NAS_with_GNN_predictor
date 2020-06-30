@@ -38,8 +38,7 @@ With GNN Predicot, we can model our evolution algorithm:
 
 ![](./resource/our_method.png)
 
-The algorithm in this project:
-
+The algorithm in this project:<br>
 ![](./resource/algorithm.png)
 
 ## Experiment
@@ -72,7 +71,8 @@ In the figure, we found that the architecture searched by our method is better t
 ## Instruction
 we provide the training data (the validation accuracy and architecture of 300 architecture sampled from the search space), the searched architecture and the weight of the GNN predictor in `./logs/`.
 
-1. Revise the training setting in `config/config.yml`
+1. Modify the training setting in `config/config.yml`
+2. Install dependency ``pip3 install -r requirements.txt``
 
 #### Random sample architecture
 ```
