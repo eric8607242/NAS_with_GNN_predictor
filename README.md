@@ -8,6 +8,7 @@ In this project, our NAS method utilized evolution algorithm and GNN predictor t
 ## Search Space
 Before searching, we fixed the macro architecture in our search space(e.g., the total layers, feature map size in each layers and channel size in each layers).
 The macro architecture:
+
 ![](./resource/macro_architecture.png)
 
 The only component we are going to search is the operation in each layer.
@@ -21,6 +22,7 @@ The only component we are going to search is the operation in each layer.
 In each layer, each candidate operation can be selected or not. In total, our search space has a size of $2^{6x5}$.
 ## Method
 After defining search space, we can totally utilize evolution algorithm to search the architecture:
+
 ![](./resource/evolution_algorithm.png)
 
 In each evaluating step, we have to train each population architecture to get the parent architectures.
@@ -33,9 +35,11 @@ In order to train the GNN predictor, we random sampled 300 architecture from our
 And we split 300 architectures to training dataset and testing dataset(250 v.s 50).
 
 With GNN Predicot, we can model our evolution algorithm:
+
 ![](./resource/our_method.png)
 
 The algorithm in this project:
+
 ![](./resource/algorithm.png)
 
 ## Experiment
@@ -57,13 +61,17 @@ In order to verify the performnace of GNN predictor, we trained a NN Predictor a
 ### CIFAR100 results
 In this experiment, we search the best architecture by our method and compared with the result of random search.
 Under the almost hardware resourece limitations, our method obtain a highly competitive result 58.67% top-1 accuracy for CIFAR100 classification, which surpasses random search (+0.9%)
+
 ![](./resource/CIFAR100.png)
 
 And we also visulize the result for 300 architectures and our architecture(For fair comparison, we train each architecture with the same training strategy).
+
 ![](./resource/visualize.png)
 
 In the figure, we found that the architecture searched by our method is better than all architectures random sampled from search space.
 ## Instruction
+we provide the training data (the validation accuracy and architecture of 300 architecture sampled from the search space), the searched architecture and the weight of the GNN predictor in `./logs/`.
+
 1. Revise the training setting in `config/config.yml`
 
 #### Random sample architecture
@@ -74,6 +82,10 @@ python3 evaluate.py --cfg config/config.yml --generate-architecture
 #### Train random sample architecture
 ```
 python3 train.py --cfg config/config.yml --train-data --load-architecture
+```
+#### Train predictor
+```
+python3 train_predictor.py --cfg config/config.yml 
 ```
 
 #### Evoluate architecture
