@@ -9,7 +9,7 @@ def select_mating_pool(pop, fitness, num_parents):
         fitness[max_fitness_idx] = -99999999999
     return parents
 
-def crossover(evolution_id, parents, candidate_table, offspring_size, macs_budget):
+def crossover(evolution_id, parents, offspring_size, macs_budget):
     max_layers = parents.shape[1]
     offspring = np.empty((1, max_layers), dtype=np.int32)
 
@@ -33,7 +33,7 @@ def mutation(offspring_crossover, num_mutations=1):
 
     for l in range(max_layers):
         mut_pro = np.random.choice([0, 1], p=[0.9, 0.1])
-        random_value = np.random.randint(low=0, high=6)
+        random_value = np.random.randint(low=0, high=2)
         if mut_pro == 1:
             offspring_crossover[0, l] = random_value
         
