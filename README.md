@@ -9,6 +9,7 @@ In this project, our NAS method utilized evolution algorithm and GNN predictor t
 Before searching, we fixed the macro architecture in our search space(e.g., the total layers, feature map size in each layers and channel size in each layers).
 The macro architecture:
 ![](./resource/macro_architecture.png)
+
 The only component we are going to search is the operation in each layer.
 * The candidate operations:
     * Separate convolution 3x3
@@ -21,6 +22,7 @@ In each layer, each candidate operation can be selected or not. In total, our se
 ## Method
 After defining search space, we can totally utilize evolution algorithm to search the architecture:
 ![](./resource/evolution_algorithm.png)
+
 In each evaluating step, we have to train each population architecture to get the parent architectures.
 However, it takes a lot of time to train each population architecture in once evolution algorithm.
 To save time, we train a GNN predictor to predict the validation accuracy of each population architecture instead of train a few epochs. With the GNN predictor, we can finish the evolution algorithm to get the architecture in seconds.
@@ -56,7 +58,31 @@ In order to verify the performnace of GNN predictor, we trained a NN Predictor a
 In this experiment, we search the best architecture by our method and compared with the result of random search.
 Under the almost hardware resourece limitations, our method obtain a highly competitive result 58.67% top-1 accuracy for CIFAR100 classification, which surpasses random search (+0.9%)
 ![](./resource/CIFAR100.png)
+
 And we also visulize the result for 300 architectures and our architecture(For fair comparison, we train each architecture with the same training strategy).
 ![](./resource/visualize.png)
+
 In the figure, we found that the architecture searched by our method is better than all architectures random sampled from search space.
-## Usage
+## Instruction
+1. Revise the training setting in `config/config.yml`
+
+#### Random sample architecture
+```
+python3 evaluate.py --cfg config/config.yml --generate-architecture
+```
+
+#### Train random sample architecture
+```
+python3 train.py --cfg config/config.yml --train-data --load-architecture
+```
+
+#### Evoluate architecture
+```
+python3 evolution.py --cfg config/config.yml
+```
+
+#### Train searched architecture
+1. Modify the path of `path_to_architecture` to the evolution architecture in `config/config.yml`
+```
+python3 train.py --cfg config/config.yml --load-architecture
+```

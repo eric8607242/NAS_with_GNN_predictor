@@ -48,7 +48,7 @@ def evolution():
     nodes_num = calculate_nodes(CONFIG)
 
     model = Predictor(nodes_num)
-    model.load_state_dict(torch.load("./gcn_weight.pth"))
+    model.load_state_dict(torch.load(CONFIG.predictor_pretrained))
     model = model.cuda()
 
     sol_per_pop = 20
@@ -91,4 +91,4 @@ def evolution():
     architecture_metric = []
     architecture_metric.append(decode_population(new_population[best_idx, :], nodes_num).reshape(-1))
     df_architecture = pd.DataFrame(architecture_metric)
-    df_architecture.to_csv("./evolution_architecture", index=False)
+    df_architecture.to_csv(CONFIG.path_to_evolution_architecture, index=False)

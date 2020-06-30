@@ -19,6 +19,7 @@ from utils.graph import calculate_nodes, get_adj_matrix, get_random_architecture
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--cfg", type=str, help="path to the config file", required=True)
+    parser.add_argument("--train-data", action="store_true")
     parser.add_argument("--load-architecture", action="store_true")
     args = parser.parse_args()
 
@@ -43,42 +44,65 @@ if __name__ == "__main__":
     architectures = None
     if args.load_architecture:
         architectures = pd.read_csv(CONFIG.path_to_architecture)
-        print(architectures.iloc[0].values)
     else:
         nodes_num = calculate_nodes(CONFIG)
         adj_matrix = get_adj_matrix(nodes_num, CONFIG)
         adj_matrix = get_random_architecture(adj_matrix, CONFIG)
 
-    for i in range(100):
-        total_top1 = 0
-        for j in range(2):
-            adj_matrix = architectures.iloc[i].values
-            adj_matrix = adj_matrix.reshape(nodes_num, nodes_num)
+    if args.train_data:
+        for i in range(100):
+            total_top1 = 0
+            for j in range(2):
+                if args.load_architecture:
+                    adj_matrix = architectures.iloc[i].values
+                    adj_matrix = adj_matrix.reshape(nodes_num, nodes_num)
+                else:
+                    adj_matrix = get_adj_matrix(nodes_num, CONFIG)
+                    adj_matrix = get_random_architecture(adj_matrix, CONFIG)
 
-            model = Supernet(adj_matrix, CONFIG)
-            model = model.to(device)
-            if (device.type == "cuda" and CONFIG.ngpu >= 1):
-                model = nn.DataParallel(model, list(range(CONFIG.ngpu)))
+                model = Supernet(adj_matrix, CONFIG)
+                model = model.to(device)
+                if (device.type == "cuda" and CONFIG.ngpu >= 1):
+                    model = nn.DataParallel(model, list(range(CONFIG.ngpu)))
 
-            criterion = cross_encropy_with_label_smoothing
-            cal_model_efficient(model, CONFIG)
+                criterion = cross_encropy_with_label_smoothing
+                cal_model_efficient(model, CONFIG)
 
-            optimizer = get_optimizer(model, CONFIG.optim_state)
-            scheduler = get_lr_scheduler(optimizer, len(train_loader), CONFIG)
+                optimizer = get_optimizer(model, CONFIG.optim_state)
+                scheduler = get_lr_scheduler(optimizer, len(train_loader), CONFIG)
 
-            start_time = time.time()
-            trainer = Trainer(criterion, optimizer, scheduler, None, device, CONFIG)
-            best_top1 = trainer.train_loop(train_loader, test_loader, model)
-            logging.info("Total training time : {:.2f}".format(time.time() - start_time))
+                start_time = time.time()
+                trainer = Trainer(criterion, optimizer, scheduler, None, device, CONFIG)
+                best_top1 = trainer.train_loop(train_loader, test_loader, model)
+                logging.info("Total training time : {:.2f}".format(time.time() - start_time))
 
-            total_top1 += best_top1
-        total_top1 /= 2
+                total_top1 += best_top1
+            total_top1 /= 2
 
-        avg_metric["architecture_num"].append(i)
-        avg_metric["avg"].append(total_top1)
+            avg_metric["architecture_num"].append(i)
+            avg_metric["avg"].append(total_top1)
 
-    df_metric = pd.DataFrame(avg_metric)
-    df_metric.to_csv(CONFIG.path_to_train_data, index=False)
+        df_metric = pd.DataFrame(avg_metric)
+        df_metric.to_csv(CONFIG.path_to_train_data, index=False)
+    else:
+        adj_matrix = architectures.iloc[0].values
+        adj_matrix = adj_matrix.reshape(nodes_num, nodes_num)
+
+        model = Supernet(adj_matrix, CONFIG)
+        model = model.to(device)
+        if (device.type == "cuda" and CONFIG.ngpu >= 1):
+            model = nn.DataParallel(model, list(range(CONFIG.ngpu)))
+
+        criterion = cross_encropy_with_label_smoothing
+        cal_model_efficient(model, CONFIG)
+
+        optimizer = get_optimizer(model, CONFIG.optim_state)
+        scheduler = get_lr_scheduler(optimizer, len(train_loader), CONFIG)
+
+        start_time = time.time()
+        trainer = Trainer(criterion, optimizer, scheduler, None, device, CONFIG)
+        best_top1 = trainer.train_loop(train_loader, test_loader, model)
+        logging.info("Total training time : {:.2f}".format(time.time() - start_time))
 
     
 
