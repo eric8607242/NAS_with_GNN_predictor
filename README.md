@@ -19,18 +19,20 @@ The only component we are going to search is the operation in each layer.
     * Dilated convolution 3x3
     * Dilated convolution 5x5
     * Skip
-In each layer, each candidate operation can be selected or not. In total, our search space has a size of $2^{6x5}$.
+
+In each layer, each candidate operation can be selected or not. In total, our search space has a size of <img src="https://latex.codecogs.com/gif.latex?2^{6*5}"/> .
 ## Method
 After defining search space, we can totally utilize evolution algorithm to search the architecture:
 
 ![](./resource/evolution_algorithm.png)
 
 In each evaluating step, we have to train each population architecture to get the parent architectures.
-However, it takes a lot of time to train each population architecture in once evolution algorithm.
+However, it takes a lot of time to train each population architecture in each evolution step. And we cannot reuse the training result of the population architecture between each evolution algorithm process.
 To save time, we train a GNN predictor to predict the validation accuracy of each population architecture instead of train a few epochs. With the GNN predictor, we can finish the evolution algorithm to get the architecture in seconds.
 
 ### GNN Predictor
-The architecture of our GNN predictor is followed [1].
+The architecture of our GNN predictor is followed [1].<br>
+![](./resource/gnn_predictor.png)
 In order to train the GNN predictor, we random sampled 300 architecture from our search space and trained each architecture for 60 epoch to get the gound truth validation accuracy.
 And we split 300 architectures to training dataset and testing dataset(250 v.s 50).
 
@@ -44,7 +46,7 @@ The algorithm in this project:<br>
 ## Experiment
 ### Experiment Setting
 In the project, we perform all experiments based on the CIFAR100 dataset.
-#### Predictor training
+#### Predictor Training
 For training predictor, we random sampled 300 architectures from our search space and trained each architecture for 60 epochs to get the gound truth validation accuracy.
 We spent 2 day to train 300 architecture on 4 1080Ti.
 #### Evaluate
@@ -57,7 +59,7 @@ We spent 2 day to train 300 architecture on 4 1080Ti.
 In order to verify the performnace of GNN predictor, we trained a NN Predictor and calculate the Kentall tau to show the correlation between the ground truth accuracy and predict accuracy.
 ![](./resource/predictor.png)
 
-### CIFAR100 results
+### CIFAR100 Results
 In this experiment, we search the best architecture by our method and compared with the result of random search.
 Under the almost hardware resourece limitations, our method obtain a highly competitive result 58.67% top-1 accuracy for CIFAR100 classification, which surpasses random search (+0.9%)
 
@@ -68,6 +70,10 @@ And we also visulize the result for 300 architectures and our architecture(For f
 ![](./resource/visualize.png)
 
 In the figure, we found that the architecture searched by our method is better than all architectures random sampled from search space.
+## Discussion
+### Final Searched Architecture
+The final searched architecture:<br>
+![](./resource/final_architecture.png)
 ## Instruction
 we provide the training data (the validation accuracy and architecture of 300 architecture sampled from the search space), the searched architecture and the weight of the GNN predictor in `./logs/`.
 
@@ -98,3 +104,9 @@ python3 evolution.py --cfg config/config.yml
 ```
 python3 train.py --cfg config/config.yml --load-architecture
 ```
+
+## Reference
+[1] Changjun Fan, Li Zeng, Yuhui Ding, Muhao Chen, Yizhou Sun, Zhong Liu. Learning to Identify High Betweenness Centrality Nodes from Scratch: A Novel Graph Neural Network Approach 
+[2] KENDALL, M.G.: A NEW MEASURE OF RANK CORRELATION. Biometrika 30(1-2), 81–93 (06 1938). https://doi.org/10.1093/biomet/30.1-2.81, https:// doi.org/10.1093/biomet/30.1-2.81
+
+
