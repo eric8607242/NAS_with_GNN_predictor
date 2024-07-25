@@ -1,6 +1,6 @@
 numpy==1.17.2
 pandas==0.25.1
-torch==1.2.0
+torch==2.2.0
 torch-cluster==1.5.2
 torch-geometric==1.4.3
 torch-scatter==2.0.3
